@@ -17,7 +17,7 @@ import (
 var tokens = make(map[string]string)
 
 func SendNatsMessage(t *testing.T, channel string, payload map[string]interface{}) {
-	path = "/nats-remote/" + channel
+	path := "/nats-remote/" + channel
 	re, err := json.Marshal(payload)
 	require.Nil(t, err)
 	PostUnauthorizedAndCheckStatusCode(t, path, string(re), 200)
@@ -78,19 +78,19 @@ func PatchAuthorized(t *testing.T, path, body string, headers ...string) *http.R
 }
 
 func PostUnauthorizedAndCheckStatusCode(t *testing.T, path, body string, expecedCode int, headers ...string) {
-	resp := postUnauthorized(t, path, body, headers...)
+	resp := PostUnauthorized(t, path, body, headers...)
 	defer resp.Body.Close()
 	require.Equal(t, expecedCode, resp.StatusCode)
 }
 
 func PostAuthorizedAndCheckStatusCode(t *testing.T, user, path, body string, expecedCode int, headers ...string) {
-	resp := postAuthorized(t, user, path, body, headers...)
+	resp := PostAuthorized(t, user, path, body, headers...)
 	defer resp.Body.Close()
 	require.Equal(t, expecedCode, resp.StatusCode)
 }
 
 func GetAuthorizedAndCheckStatusCode(t *testing.T, user, path string, expecedCode int, headers ...string) {
-	resp := getAuthorized(t, user, path, headers...)
+	resp := GetAuthorized(t, user, path, headers...)
 	defer resp.Body.Close()
 	require.Equal(t, expecedCode, resp.StatusCode)
 }
@@ -106,7 +106,7 @@ func PostAuthorized(t *testing.T, user, path, body string, headers ...string) *h
 }
 
 func CheckUnauthorized(t *testing.T, path string) {
-	resp := getUnauthorized(t, path)
+	resp := GetUnauthorized(t, path)
 	defer resp.Body.Close()
 	require.Equal(t, http.StatusUnauthorized, resp.StatusCode)
 }
