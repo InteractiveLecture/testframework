@@ -23,6 +23,18 @@ func SendNatsMessage(t *testing.T, channel string, payload map[string]interface{
 	PostUnauthorizedAndCheckStatusCode(t, path, string(re), 200)
 }
 
+func MapToJsonString(t *testing.T, entity map[string]interface{}) string {
+	jsonBytes, err := json.Marshal(entity)
+	require.Nil(t, err)
+	return string(jsonBytes)
+}
+
+func MapArrayToJsonString(t *testing.T, entities []map[string]interface{}) string {
+	jsonBytes, err := json.Marshal(entities)
+	require.Nil(t, err)
+	return string(jsonBytes)
+}
+
 func FindRawLocalById(t *testing.T, collection []interface{}, id, idField string) map[string]interface{} {
 	var result map[string]interface{}
 	for _, v := range collection {
@@ -47,10 +59,10 @@ func FindLocalById(t *testing.T, collection []map[string]interface{}, id, idFiel
 	return result
 }
 
-func RegisterNewUser(t *testing.T, authorities ...string) (string, string) {
+func RegisterNewUser(t *testing.T, authorities ...string) string {
 	path := "/authentication-service/users"
 	username := uuid.NewV4().String()
-	userId := uuid.NewV4().String()
+	userId := username
 	user := `{
 		"id" : "` + userId + `",
 		"username": "` + username + `",
@@ -63,7 +75,7 @@ func RegisterNewUser(t *testing.T, authorities ...string) (string, string) {
 	user = strings.TrimRight(user, ",")
 	user = user + "}]}"
 	PostUnauthorizedAndCheckStatusCode(t, path, user, 204)
-	return userId, username
+	return userId
 }
 
 func PatchAuthorizedAndCheckStatusCode(t *testing.T, user, path, body string, expecedCode int, headers ...string) {
@@ -74,6 +86,7 @@ func PatchAuthorizedAndCheckStatusCode(t *testing.T, user, path, body string, ex
 }
 
 func PatchAuthorized(t *testing.T, path, body string, headers ...string) *http.Response {
+	headers = append(headers, "Content-Type", "application/json;charset=UTF-8")
 	return sendRequest(t, "PATCH", path, strings.NewReader(body), headers...)
 }
 
@@ -138,7 +151,7 @@ func GetAuthorized(t *testing.T, user, path string, headers ...string) *http.Res
 }
 
 func sendRequest(t *testing.T, requestType, path string, body io.Reader, headers ...string) *http.Response {
-	host := getHost()
+	host := GetHost()
 	req, err := http.NewRequest(requestType, "http://"+host+path, body)
 	require.Nil(t, err)
 	if len(headers)%2 != 0 {
@@ -157,7 +170,7 @@ func getToken(user string) string {
 	if val, ok := tokens[user]; ok {
 		return val
 	}
-	host := getHost()
+	host := GetHost()
 	authString := "client_id=user-web-client&client_secret=user-web-client-secret&grant_type=password&username=" + user + "&password=" + user
 	reader := strings.NewReader(authString)
 	result, err := http.Post("http://"+host+"/authentication-service/oauth/token", "application/x-www-form-urlencoded", reader)
@@ -177,6 +190,6 @@ func getToken(user string) string {
 	return tokens[user]
 }
 
-func getHost() string {
+func GetHost() string {
 	return os.Getenv("DH")
 }
